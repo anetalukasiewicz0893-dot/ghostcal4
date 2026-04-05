@@ -1,0 +1,159 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, Tv2, Menu, X, Star, Zap } from 'lucide-react';
+import { tvmaze } from '@/lib/tvmaze';
+
+export default function Navbar() {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSug, setShowSug] = useState(false);
+  const debounceRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const NAV = [
+    { label: 'HOME',     to: '/shows' },
+    { label: 'MY SHOWS', to: '/my-shows' },
+  ];
+
+  useEffect(() => {
+    if (query.length < 2) { setSuggestions([]); return; }
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const results = await tvmaze.search(query);
+      setSuggestions(results.slice(0, 5));
+      setShowSug(true);
+    }, 350);
+  }, [query]);
+
+  const handleSelect = (show) => {
+    setQuery('');
+    setSuggestions([]);
+    setShowSug(false);
+    navigate(`/show?id=${show.id}`);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    navigate(`/shows?q=${encodeURIComponent(query.trim())}`);
+    setQuery('');
+    setShowSug(false);
+  };
+
+  return (
+    <header className="sticky top-0 z-50" style={{ borderBottom: '1px solid rgba(255,110,199,0.2)' }}>
+      {/* Marquee ticker */}
+      <div className="overflow-hidden py-0.5" style={{ background: 'linear-gradient(90deg, #ff6ec7, #b44fff, #00f5ff, #ff6ec7)', height: 3 }} />
+      <div className="overflow-hidden py-1 text-[10px]"
+        style={{ background: 'rgba(13,8,30,0.95)', borderBottom: '1px solid rgba(61,32,96,0.5)' }}>
+        <div className="flex whitespace-nowrap">
+          <span className="marquee-track inline-flex gap-8 text-vp-pink font-retro text-sm" style={{ minWidth: '200%' }}>
+            {Array(4).fill('✦ NOW STREAMING ✦ TOP PICKS ✦ NEW EPISODES ✦ BINGE WORTHY ✦ MUST WATCH ✦ HOT SERIES ✦ TRENDING NOW').map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(7,5,15,0.97)', backdropFilter: 'blur(20px)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
+
+          {/* Logo */}
+          <Link to="/shows" className="flex items-center gap-2 flex-shrink-0 group">
+            <div className="w-8 h-8 flex items-center justify-center pulse-glow"
+              style={{ background: 'linear-gradient(135deg,#ff6ec7,#b44fff)', clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)' }}>
+              <Tv2 className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <div className="font-pixel text-vp-pink text-xs leading-none glow-pink">GHOST</div>
+              <div className="font-pixel text-vp-cyan text-xs leading-none glow-cyan">CAL</div>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1 ml-4">
+            {NAV.map(({ label, to }) => (
+              <Link key={to} to={to}
+                className={`font-orb text-[10px] tracking-widest px-3 py-2 transition-all duration-200 ${
+                  pathname === to || (to === '/shows' && pathname === '/')
+                    ? 'text-vp-pink border-b border-vp-pink'
+                    : 'text-purple-400/70 hover:text-vp-pink'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Search */}
+          <div className="flex-1 max-w-md relative">
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-0">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-vp-purple/60 pointer-events-none" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onFocus={() => suggestions.length && setShowSug(true)}
+                  onBlur={() => setTimeout(() => setShowSug(false), 200)}
+                  placeholder="SEARCH SHOWS..."
+                  className="vp-input pl-9 py-2 text-sm font-orb tracking-wider"
+                  style={{ fontSize: 11 }}
+                />
+              </div>
+              <button type="submit" className="vp-btn-primary py-2 px-4 text-[10px] h-full">
+                <Zap className="w-3 h-3" />
+              </button>
+            </form>
+
+            {/* Suggestions dropdown */}
+            {showSug && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 vp-window overflow-hidden">
+                {suggestions.map(s => (
+                  <button key={s.id} onMouseDown={() => handleSelect(s)}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-vp-pink/10 transition-colors text-left">
+                    {s.image
+                      ? <img src={s.image} alt="" className="w-8 h-10 object-cover flex-shrink-0" />
+                      : <div className="w-8 h-10 bg-vp-border flex-shrink-0 flex items-center justify-center"><span className="text-xs">📺</span></div>
+                    }
+                    <div>
+                      <div className="font-grotesk text-sm text-white">{s.name}</div>
+                      <div className="font-retro text-vp-cyan text-sm">{s.genres?.slice(0,2).join(' · ')}</div>
+                    </div>
+                    {s.rating && (
+                      <div className="ml-auto flex items-center gap-1 vp-badge flex-shrink-0">
+                        <Star className="w-2.5 h-2.5 fill-current" />{s.rating}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right: mobile toggle */}
+          <button className="md:hidden text-vp-pink ml-auto" onClick={() => setMobileOpen(o => !o)}>
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-vp-border" style={{ background: 'rgba(7,5,15,0.98)' }}>
+          <div className="px-4 py-4 flex flex-col gap-3">
+            {NAV.map(({ label, to }) => (
+              <Link key={to} to={to} onClick={() => setMobileOpen(false)}
+                className="font-orb text-[11px] tracking-widest text-purple-300 hover:text-vp-pink py-2 border-b border-vp-border/40">
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}

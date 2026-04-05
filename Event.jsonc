@@ -1,0 +1,27 @@
+{
+  "name": "AffiliateLink",
+  "type": "object",
+  "properties": {
+    "show_id": {
+      "type": "number",
+      "description": "TVMaze show ID this link belongs to"
+    },
+    "show_name": {
+      "type": "string",
+      "description": "Show name for reference"
+    },
+    "service_name": {
+      "type": "string",
+      "description": "Streaming service name (e.g. Netflix, Hulu)"
+    },
+    "url": {
+      "type": "string",
+      "description": "Affiliate URL"
+    }
+  },
+  "required": [
+    "show_id",
+    "service_name",
+    "url"
+  ]
+}

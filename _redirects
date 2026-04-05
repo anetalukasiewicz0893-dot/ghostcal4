@@ -1,0 +1,49 @@
+{
+  "name": "SavedShow",
+  "type": "object",
+  "properties": {
+    "show_id": {
+      "type": "number",
+      "description": "TVMaze show ID"
+    },
+    "show_name": {
+      "type": "string",
+      "description": "Show name (cached)"
+    },
+    "show_image": {
+      "type": "string",
+      "description": "Poster image URL"
+    },
+    "show_genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Genre list"
+    },
+    "show_status": {
+      "type": "string",
+      "description": "Running / Ended / etc"
+    },
+    "show_rating": {
+      "type": "number",
+      "description": "Rating out of 10"
+    },
+    "watch_status": {
+      "type": "string",
+      "enum": [
+        "watching",
+        "completed",
+        "on_hold",
+        "dropped",
+        "plan_to_watch"
+      ],
+      "default": "plan_to_watch",
+      "description": "User watch status"
+    }
+  },
+  "required": [
+    "show_id",
+    "show_name"
+  ]
+}
